@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Explorer</title>
+<style>
+:root{--bg1:#0f0c29;--bg2:#302b63;--bg3:#24243e;--card:rgba(255,255,255,.08);--bd:rgba(255,255,255,.18);--tx:#f4f4ff;--mu:#b9b9d9;--ac:#8b5cf6;--ac2:#06b6d4;--ok:#34d399}
+:root[data-theme=light]{--bg1:#e0e7ff;--bg2:#fce7f3;--bg3:#cffafe;--card:rgba(255,255,255,.7);--bd:rgba(0,0,0,.1);--tx:#1e1b4b;--mu:#555577}
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;font-family:'Segoe UI',system-ui,'Noto Sans Tamil',sans-serif;color:var(--tx);background:linear-gradient(130deg,var(--bg1),var(--bg2),var(--bg3));background-size:300% 300%;animation:bg 18s ease infinite;padding:24px 16px 60px;overflow-x:hidden}
+@keyframes bg{50%{background-position:100% 50%}}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);opacity:.35;z-index:0;animation:float 12s ease-in-out infinite}
+.o1{width:300px;height:300px;background:var(--ac);top:-60px;left:-60px}
+.o2{width:260px;height:260px;background:var(--ac2);bottom:-40px;right:-40px;animation-delay:-5s}
+@keyframes float{50%{transform:translate(40px,30px) scale(1.15)}}
+.wrap{position:relative;z-index:1;max-width:820px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+h1{font-size:clamp(1.6rem,4vw,2.4rem);background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mu);font-size:.95rem;margin-top:4px}
+.icon-btn{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:50%;width:42px;height:42px;font-size:1.1rem;cursor:pointer;backdrop-filter:blur(10px);transition:.2s}
+.icon-btn:hover{transform:rotate(20deg) scale(1.1)}
+.glass{background:var(--card);border:1px solid var(--bd);border-radius:20px;backdrop-filter:blur(16px);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.search{position:relative;padding:8px;display:flex;gap:8px}
+.search input{flex:1;background:transparent;border:0;outline:0;color:var(--tx);font-size:1.2rem;padding:12px 14px}
+.search input::placeholder{color:var(--mu)}
+.go{background:linear-gradient(135deg,var(--ac),var(--ac2));border:0;color:#fff;border-radius:14px;padding:0 24px;font-size:1rem;font-weight:600;cursor:pointer;transition:.2s}
+.go:hover{transform:scale(1.05);box-shadow:0 0 20px var(--ac)}
+.sug{position:absolute;left:8px;right:8px;top:100%;margin-top:6px;z-index:5;overflow:hidden;display:none}
+.sug div{padding:10px 16px;cursor:pointer}
+.sug div:hover,.sug div.on{background:rgba(139,92,246,.3)}
+.hist{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tag{font-size:.85rem;padding:5px 12px;border-radius:99px;background:var(--card);border:1px solid var(--bd);cursor:pointer;transition:.2s}
+.tag:hover{background:var(--ac);color:#fff}
+#choice{margin-top:24px;padding:22px;display:none;animation:pop .45s}
+@keyframes pop{from{opacity:0;transform:translateY(20px) scale(.97)}}
+.q{font-size:1.1rem;margin-bottom:14px}
+.q b{color:var(--ac2);font-size:1.4rem}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{padding:11px 18px;border-radius:14px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:.98rem;cursor:pointer;transition:.2s}
+.chip:hover{transform:translateY(-3px);border-color:var(--ac)}
+.chip.on{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border-color:transparent;box-shadow:0 6px 20px rgba(139,92,246,.5)}
+.chip.all{border-style:dashed}
+#res{margin-top:22px;display:grid;gap:16px}
+.card{padding:20px;animation:pop .5s both}
+.card h3{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ac2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card p,.card li{line-height:1.6}
+.card ul{padding-left:20px}
+.pos{display:inline-block;font-size:.75rem;background:var(--ac);color:#fff;border-radius:6px;padding:2px 8px;margin:8px 0 4px;font-style:italic}
+.ta{font-size:2rem;font-weight:700;color:var(--ok)}
+.pill{display:inline-block;margin:4px 6px 0 0;padding:5px 13px;border-radius:99px;background:rgba(6,182,212,.18);border:1px solid var(--ac2);cursor:pointer;transition:.2s}
+.pill:hover{background:var(--ac2);color:#fff}
+.ex{border-left:3px solid var(--ac);padding-left:12px;margin:8px 0;color:var(--mu);font-style:italic}
+.wordhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.wordhead h2{font-size:2.2rem}
+.ph{color:var(--mu)}
+.mini{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:10px;padding:6px 12px;cursor:pointer}
+.mini:hover{background:var(--ac);color:#fff}
+.load{text-align:center;padding:30px;color:var(--mu)}
+.spin{width:34px;height:34px;border:4px solid var(--bd);border-top-color:var(--ac);border-radius:50%;margin:0 auto 10px;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{color:#fb7185}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ok);color:#052e1f;padding:8px 18px;border-radius:99px;opacity:0;transition:.3s;z-index:9;font-weight:600}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="orb o1"></div><div class="orb o2"></div>
+<div class="wrap">
+  <div class="top">
+    <div><h1>✨ Word Explorer</h1><div class="sub">Type a word, then pick what you want to learn</div></div>
+    <button class="icon-btn" id="theme" title="Toggle theme">🌙</button>
+  </div>
+
+  <div class="glass search" id="sbox">
+    <input id="w" placeholder="Type a word… e.g. brave" autocomplete="off" autofocus>
+    <button class="go" id="go">Search</button>
+    <div class="glass sug" id="sug"></div>
+  </div>
+  <div class="hist" id="hist"></div>
+
+  <div class="glass" id="choice">
+    <div class="q">What would you like to see for <b id="cw"></b>?</div>
+    <div class="chips" id="chips">
+      <button class="chip" data-k="meaning">📖 Meaning</button>
+      <button class="chip" data-k="opposite">🔄 Opposite</button>
+      <button class="chip" data-k="example">💬 Example</button>
+      <button class="chip" data-k="tamil">🌐 Tamil (தமிழ்)</button>
+      <button class="chip all" data-k="all">🚀 All of the above</button>
+    </div>
+  </div>
+
+  <div id="res"></div>
+</div>
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const inp=$('#w'),sug=$('#sug'),res=$('#res'),choice=$('#choice');
+let word='',data=null,tamil=null,selected=new Set(),sIdx=-1,timer;
+
+/* theme */
+const root=document.documentElement;
+$('#theme').onclick=()=>{const l=root.dataset.theme==='light';root.dataset.theme=l?'dark':'light';$('#theme').textContent=l?'🌙':'☀️'};
+
+/* history */
+let hist=[];
+const renderHist=()=>{$('#hist').innerHTML=hist.map(h=>`<span class="tag">${h}</span>`).join('');
+  document.querySelectorAll('.tag').forEach(t=>t.onclick=()=>{inp.value=t.textContent;start()})};
+
+/* autocomplete (Datamuse) */
+inp.addEventListener('input',()=>{
+  clearTimeout(timer);const v=inp.value.trim();
+  if(v.length<2){sug.style.display='none';return}
+  timer=setTimeout(async()=>{
+    try{const r=await(await fetch('https://api.datamuse.com/sug?max=6&s='+encodeURIComponent(v))).json();
+      if(!r.length){sug.style.display='none';return}
+      sug.innerHTML=r.map(x=>`<div>${x.word}</div>`).join('');sug.style.display='block';sIdx=-1;
+      sug.querySelectorAll('div').forEach(d=>d.onclick=()=>{inp.value=d.textContent;start()});
+    }catch(e){}
+  },200);
+});
+inp.addEventListener('keydown',e=>{
+  const items=[...sug.querySelectorAll('div')];
+  if(e.key==='ArrowDown'&&items.length){sIdx=(sIdx+1)%items.length}
+  else if(e.key==='ArrowUp'&&items.length){sIdx=(sIdx-1+items.length)%items.length}
+  else if(e.key==='Enter'){if(sIdx>=0&&items[sIdx])inp.value=items[sIdx].textContent;start();return}
+  else return;
+  e.preventDefault();items.forEach((d,i)=>d.classList.toggle('on',i===sIdx));
+});
+document.addEventListener('click',e=>{if(!$('#sbox').contains(e.target))sug.style.display='none'});
+$('#go').onclick=start;
+
+/* flow */
+function start(){
+  const v=inp.value.trim().toLowerCase();
+  if(!v)return;
+  word=v;data=null;tamil=null;selected.clear();res.innerHTML='';
+  sug.style.display='none';
+  $('#cw').textContent=word;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  choice.style.display='block';
+  hist=[word,...hist.filter(h=>h!==word)].slice(0,6);renderHist();
+}
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+  const k=c.dataset.k;
+  if(k==='all'){
+    const allOn=selected.size===4;selected.clear();
+    if(!allOn)['meaning','opposite','example','tamil'].forEach(x=>selected.add(x));
+  } else {selected.has(k)?selected.delete(k):selected.add(k)}
+  document.querySelectorAll('.chip').forEach(ch=>{
+    const kk=ch.dataset.k;
+    ch.classList.toggle('on',kk==='all'?selected.size===4:selected.has(kk));
+  });
+  render();
+});
+
+/* ---------- data fetching with backups ---------- */
+async function jget(url){
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),9000);
+  try{const r=await fetch(url,{signal:c.signal});
+    if(r.status===404)return {__404:true};
+    if(!r.ok)throw new Error(r.status);
+    return await r.json();
+  } finally{clearTimeout(t)}
+}
+const strip=h=>{const d=document.createElement('div');d.innerHTML=h||'';return d.textContent.trim()};
+
+async function load(){
+  if(data)return;
+  let notFound=false;
+  /* source 1: dictionaryapi.dev */
+  try{
+    const r=await jget('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word));
+    if(r.__404)notFound=true; else if(Array.isArray(r)&&r[0]){data=r[0];return}
+  }catch(e){}
+  /* source 2: Wiktionary (backup) */
+  try{
+    const r=await jget('https://en.wiktionary.org/api/rest_v1/page/definition/'+encodeURIComponent(word));
+    if(r.__404){notFound=notFound||true}
+    else if(r.en){
+      data={word,phonetic:'',phonetics:[],meanings:r.en.map(m=>({
+        partOfSpeech:m.partOfSpeech.toLowerCase(),antonyms:[],
+        definitions:m.definitions.filter(d=>strip(d.definition)).map(d=>({
+          definition:strip(d.definition),
+          example:strip((d.parsedExamples&&d.parsedExamples[0]&&d.parsedExamples[0].example)||(d.examples&&d.examples[0])||'')
+        }))
+      }))};
+      return;
+    }
+  }catch(e){ if(!notFound){data={error:true};return} }
+  data=notFound?{notfound:true}:{error:true};
+}
+
+async function loadTamil(){
+  if(tamil!==null)return;
+  /* Google Translate endpoint */
+  try{
+    const r=await jget('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ta&dt=t&q='+encodeURIComponent(word));
+    const t=r[0].map(x=>x[0]).join('');
+    if(t){tamil=t;return}
+  }catch(e){}
+  /* MyMemory (backup) */
+  try{
+    const r=await jget(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ta`);
+    tamil=(r.responseData&&r.responseData.translatedText)||'';
+  }catch(e){tamil=''}
+}
+
+/* ---------- render results ---------- */
+async function render(){
+  if(!selected.size){res.innerHTML='';return}
+  const w=word;
+  res.innerHTML='<div class="glass load"><div class="spin"></div>Looking it up…</div>';
+  const needDict=['meaning','example','opposite'].some(k=>selected.has(k));
+  await Promise.all([needDict?load():0,selected.has('tamil')?loadTamil():0]);
+  if(w!==word)return;
+
+  const entry=(data&&data.word)?data:null;
+  const M=entry?entry.meanings:[];
+  const why=data&&data.error
+    ?'Could not reach the dictionary servers. Check your connection, VPN or ad-blocker, then try again.'
+    :`No dictionary entry found for "${word}". Check the spelling.`;
+  const fail=t=>`<p class="err">⚠️ ${t}</p>`;
+  let html='';
+
+  if(entry&&['meaning','example'].some(k=>selected.has(k))){
+    const ph=entry.phonetic||((entry.phonetics||[]).find(p=>p.text)||{}).text||'';
+    const audio=((entry.phonetics||[]).find(p=>p.audio)||{}).audio||'';
+    html+=`<div class="glass card"><div class="wordhead"><h2>${entry.word}</h2><span class="ph">${ph}</span>
+      <button class="mini" id="say" data-a="${audio}">🔊 Listen</button>
+      <button class="mini" id="cp">📋 Copy</button></div></div>`;
+  }
+  if(selected.has('meaning')){
+    html+='<div class="glass card"><h3>📖 Meaning</h3>'+(entry?M.map(m=>`<span class="pos">${m.partOfSpeech}</span><ul>${m.definitions.slice(0,3).map(d=>`<li>${d.definition}</li>`).join('')}</ul>`).join(''):fail(why))+'</div>';
+  }
+  if(selected.has('opposite')){
+    const ant=new Set();
+    M.forEach(m=>{(m.antonyms||[]).forEach(a=>ant.add(a));m.definitions.forEach(d=>(d.antonyms||[]).forEach(a=>ant.add(a)))});
+    if(!ant.size){try{(await jget('https://api.datamuse.com/words?max=10&rel_ant='+encodeURIComponent(word))).forEach(x=>ant.add(x.word))}catch(e){}}
+    html+='<div class="glass card"><h3>🔄 Opposite words</h3>'+(ant.size?[...ant].slice(0,12).map(a=>`<span class="pill" data-w="${a}">${a}</span>`).join('')+'<p style="margin-top:10px;color:var(--mu);font-size:.85rem">Tap a word to explore it.</p>':'<p>No opposites found for this word.</p>')+'</div>';
+  }
+  if(selected.has('example')){
+    const ex=[];M.forEach(m=>m.definitions.forEach(d=>{if(d.example)ex.push(d.example)}));
+    html+='<div class="glass card"><h3>💬 Example sentences</h3>'+(entry?(ex.length?ex.slice(0,4).map(e=>`<div class="ex">“${e}”</div>`).join(''):'<p>No example sentence available for this word.</p>'):fail(why))+'</div>';
+  }
+  if(selected.has('tamil')){
+    html+=`<div class="glass card"><h3>🌐 Tamil translation</h3>${tamil?`<div class="ta">${tamil}</div><button class="mini" id="saya" style="margin-top:10px">🔊 Hear Tamil</button>`:fail('Translation unavailable. Check your connection and try again.')}</div>`;
+  }
+  res.innerHTML=html;
+  $('#say')&&($('#say').onclick=e=>{const a=e.target.dataset.a;if(a)new Audio(a).play();else speak(word,'en-US')});
+  $('#saya')&&($('#saya').onclick=()=>speak(tamil,'ta-IN'));
+  $('#cp')&&($('#cp').onclick=()=>{navigator.clipboard.writeText(res.innerText);toast()});
+  document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>{inp.value=p.dataset.w;start();window.scrollTo({top:0,behavior:'smooth'})});
+}
+function speak(t,l){const u=new SpeechSynthesisUtterance(t);u.lang=l;speechSynthesis.speak(u)}
+function toast(){const t=$('#toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1400)}
+</script>
+</body>
+</html>
